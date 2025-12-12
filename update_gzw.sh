@@ -37,7 +37,7 @@ if [ -z "${STEAMCMD}" ]; then
 fi
 
 # find steam dir
-STEAM_DIR=$(dirname $(find ${HOME}/.local/share -type d -name steamapps 2>/dev/null | head -n 1))
+STEAM_DIR=$(dirname $(find "${HOME}/.local/share" -type d -name steamapps 2>/dev/null | head -n 1))
 STEAM_USERNAME=""
 REVERT=false
 
@@ -68,7 +68,7 @@ done
 
 GAME_DIR="steamapps/common/Gray Zone Warfare"
 
-if [ -z "${STEAM_DIR}" ]
+if [ -z "${STEAM_DIR}/steamapps" ]
 then
 	echo "Steam directory not found. Change Steam directory with -d option." >&2
 	exit 1
@@ -80,16 +80,23 @@ then
 	exit 1
 fi
 
+if [ ! -d "${GZW_DIR}" ]; then
+        echo "Game directory ${GZW_DIR} not found. Change Steam directory with -d option." >&2
+        exit 1
+fi
+
 declare -a FILES=(
 	${STEAM_DIR}/${GAME_DIR}/GZW/Content/SKALLA/PrebuildWorldData/World/cache/0xaf497c273f87b6e4_0x7a22fc105639587d.dat
 	${STEAM_DIR}/${GAME_DIR}/GZW/Content/SKALLA/PrebuildWorldData/World/cache/0xb9af63cee2e43b6c_0x3cb3b3354fb31606.dat
 )
 
-if [ ! -f "${FILES[0]}" ]
-then
-	echo "Game files not found. Something is very wrong!" >&2
-	exit 1
-fi
+while file in "${FILES[@]}"; do
+	if [ ! -f "${file}" ]
+	then
+		echo "Game file not found. Something is very wrong! (Missing: ${file})" >&2
+		exit 1
+	fi
+done
 
 if ! ${REVERT}
 then
@@ -98,6 +105,7 @@ then
 		read -p "Steam username: " STEAM_USERNAME
 	fi
 	read -s -p "Steam password: " STEAM_PASSWORD
+	echo
 fi
 
 # Apply the update & fix
